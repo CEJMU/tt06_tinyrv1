@@ -72,6 +72,7 @@ svc_target(${SC_TOP} INIT_LOCAL_VARS ELAB_TOP tb.dut_inst)
 
 add_custom_command(OUTPUT sv_out/${SC_TOP}.sv
     COMMAND ./${SC_TOP}_sctool
+    DEPENDS ${SC_TOP}_sctool
 
     COMMENT "Starting compilation to SystemVerilog"
 )
