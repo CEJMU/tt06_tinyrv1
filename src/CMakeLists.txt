@@ -25,6 +25,14 @@ FetchContent_MakeAvailable(systemc)
 
 enable_testing()
 
+add_executable(main
+    main.cpp
+)
+
+target_link_libraries(main
+    SystemC::systemc
+)
+
 if(NOT DEFINED ENV{ICSC_HOME})
   message("ICSC_HOME is not defined!")
   return()
