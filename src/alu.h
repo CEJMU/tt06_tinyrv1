@@ -14,10 +14,6 @@ SC_MODULE(alu) {
 
   sc_out<int> rd;
 
-  sc_bv<7> opcode;
-  sc_bv<7> funct7;
-  sc_bv<3> funct3;
-
   SC_CTOR(alu)
       : clk("clk"), reset("reset"), a("a"), b("b"), instruction("instruction"),
         rd("rd") {
@@ -75,6 +71,11 @@ SC_MODULE(alu) {
       }
     }
   }
+
+private:
+  sc_bv<7> opcode;
+  sc_bv<7> funct7;
+  sc_bv<3> funct3;
 };
 
 #endif // ALU_H_
