@@ -498,10 +498,10 @@ module instructioncounter(clk, reset, pcflag, s0, s1, pc_offset, pc_inc, pc_new)
 endmodule
 
 module memory(clk, reset, addr, datain, write_en, dataout);
-  wire [511:0] _0_;
+  wire [255:0] _0_;
   wire [31:0] _1_;
-  input [3:0] addr;
-  wire [3:0] addr;
+  input [2:0] addr;
+  wire [2:0] addr;
   input clk;
   wire clk;
   input [31:0] datain;
@@ -512,7 +512,7 @@ module memory(clk, reset, addr, datain, write_en, dataout);
   wire reset;
   input write_en;
   wire write_en;
-  reg [31:0] mem [15:0];
+  reg [31:0] mem [7:0];
   initial begin
     mem[0] = 32'd0;
     mem[1] = 32'd0;
@@ -522,14 +522,6 @@ module memory(clk, reset, addr, datain, write_en, dataout);
     mem[5] = 32'd0;
     mem[6] = 32'd0;
     mem[7] = 32'd0;
-    mem[8] = 32'd0;
-    mem[9] = 32'd0;
-    mem[10] = 32'd0;
-    mem[11] = 32'd0;
-    mem[12] = 32'd0;
-    mem[13] = 32'd0;
-    mem[14] = 32'd0;
-    mem[15] = 32'd0;
   end
   always @(posedge clk) begin
     if (write_en)
@@ -1066,7 +1058,7 @@ module tt_um_cejmu_riscv(clk, ena, rst_n, ui_in, uio_in, uo_out, uio_out, uio_oe
     .write_en(_12_)
   );
   memory memory_inst (
-    .addr(mem_addr_in[3:0]),
+    .addr(mem_addr_in[2:0]),
     .clk(clk),
     .datain(mem_data_in),
     .dataout(_01_),
