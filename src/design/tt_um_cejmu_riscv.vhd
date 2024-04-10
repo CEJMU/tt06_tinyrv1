@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity tt_cejmu_riscv is
+entity tt_um_cejmu_riscv is
   port (
     clk     : in  std_logic;
     ena     : in  std_logic;
@@ -13,9 +13,9 @@ entity tt_cejmu_riscv is
     uio_out : out std_logic_vector(7 downto 0);
     uio_oe  : out std_logic_vector(7 downto 0)
     );
-end entity tt_cejmu_riscv;
+end entity tt_um_cejmu_riscv;
 
-architecture rtl of tt_cejmu_riscv is
+architecture rtl of tt_um_cejmu_riscv is
 
   alias mosi         : std_logic is ui_in(0);
   alias program_mode : std_logic is ui_in(1);
