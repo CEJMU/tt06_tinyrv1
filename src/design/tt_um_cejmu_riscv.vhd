@@ -29,7 +29,6 @@ architecture rtl of tt_um_cejmu_riscv is
   signal spi_data_valid : std_logic;
   signal mem_addr_in    : std_logic_vector(13 downto 0);
   signal mem_data_in    : std_logic_vector(31 downto 0);
-  signal dataout        : std_logic_vector(31 downto 0);
   signal reset          : std_logic;
 
 begin
@@ -53,19 +52,10 @@ begin
     port map (
       clk      => clk,
       reset    => reset,
-      data_in  => dataout,
+      data_in  => spi_data_out,
       addr_out => cpu_addr_out,
       data_out => cpu_data_out,
       write_en => cpu_write_en);
-
-  memory_inst : entity work.memory (simulation)
-    port map (
-      clk      => clk,
-      reset    => reset,
-      addr     => mem_addr_in(3 downto 0),
-      datain   => mem_data_in,
-      write_en => mem_write_en,
-      dataout  => dataout);
 
   spi_slave_inst : entity work.spi_slave (rtl)
     port map (
