@@ -29,8 +29,6 @@ architecture rtl of control is
   -- concurrentsignals for registers
   signal w31_to_w11    : std_logic_vector(20 downto 0);
 
-  signal iword_reg : std_logic_vector(31 downto 0);
-
   -- internal control signals
 
   alias mem_phase : std_logic is control_flags(0);
@@ -39,8 +37,8 @@ architecture rtl of control is
   alias imm_as_a  : std_logic is control_flags(3);
   alias jump      : std_logic is control_flags(4);
 
-  alias opcode : std_logic_vector(6 downto 0) is iword_reg(6 downto 0);
-  alias funct3 : std_logic_vector(2 downto 0) is iword_reg(14 downto 12);
+  alias opcode : std_logic_vector(6 downto 0) is iword(6 downto 0);
+  alias funct3 : std_logic_vector(2 downto 0) is iword(14 downto 12);
 
 
 begin
@@ -53,11 +51,9 @@ begin
 
       if(currstate = rst) then
         currstate <= fetch;
-        iword_reg <= iword;
 
       elsif(currstate = writeback) then
         currstate <= fetch;
-        iword_reg <= iword;
 
       elsif(currstate = fetch) then
         currstate <= decode;
@@ -90,12 +86,12 @@ begin
   -- concurrent signals for register access
 
   -- For I | S | B | U | J - Immediate
-  w31_to_w11 <= (others => iword_reg(31));
+  w31_to_w11 <= (others => iword(31));
 
-  imm <= w31_to_w11 & iword_reg(30 downto 25) & iword_reg(24 downto 20) when opcode = OP_LW or opcode = OP_IType or opcode = OP_JALR  -- I-Type
-         else w31_to_w11 & iword_reg(30 downto 25) & iword_reg(11 downto 7)                                                               when opcode = OP_SW  -- S-Type
-         else w31_to_w11(20 downto 1) & iword_reg(7) & iword_reg(30 downto 25) & iword_reg(11 downto 8) & '0'                             when opcode = OP_BRANCH  -- B-Type
-         else w31_to_w11(11 downto 0) & iword_reg(19 downto 12) & iword_reg(20) & iword_reg(30 downto 25) & iword_reg(24 downto 21) & '0' when opcode = OP_JAL  -- J-Type
+  imm <= w31_to_w11 & iword(30 downto 25) & iword(24 downto 20) when opcode = OP_LW or opcode = OP_IType or opcode = OP_JALR  -- I-Type
+         else w31_to_w11 & iword(30 downto 25) & iword(11 downto 7)                                                               when opcode = OP_SW  -- S-Type
+         else w31_to_w11(20 downto 1) & iword(7) & iword(30 downto 25) & iword(11 downto 8) & '0'                             when opcode = OP_BRANCH  -- B-Type
+         else w31_to_w11(11 downto 0) & iword(19 downto 12) & iword(20) & iword(30 downto 25) & iword(24 downto 21) & '0' when opcode = OP_JAL  -- J-Type
          else (others => '0');
 
   -- control flags
