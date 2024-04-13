@@ -11,23 +11,25 @@ entity control is
     iword             : in  std_logic_vector(31 downto 0);
     imm               : out std_logic_vector(31 downto 0);
     -- 2 downto 0 "instructiontype" | 3 I-type | 4 pc 
-    control_flags_out : out std_logic_vector(6 downto 0);
+    control_flags_out : out std_logic_vector(4 downto 0);
 
-    wbflag    : out std_logic;
-    memflag   : out std_logic;
-    pcflag    : out std_logic;
+    wbflag  : out std_logic;
+    memflag : out std_logic;
+    pcflag  : out std_logic;
     fetchflag : out std_logic
     );
 end entity control;
 
 architecture rtl of control is
 
-  type states is (rst, fetch, rs1, rs2, execute, memory, writeback);
+  type states is (rst, fetch, decode, execute, memory, writeback);
   signal currstate : states;
 
-  signal control_flags : std_logic_vector(6 downto 0);
+  signal control_flags : std_logic_vector(4 downto 0);
   -- concurrentsignals for registers
   signal w31_to_w11    : std_logic_vector(20 downto 0);
+
+  signal iword_reg : std_logic_vector(31 downto 0);
 
   -- internal control signals
 
@@ -36,12 +38,9 @@ architecture rtl of control is
   alias reg_write : std_logic is control_flags(2);
   alias imm_as_a  : std_logic is control_flags(3);
   alias jump      : std_logic is control_flags(4);
-  alias read_rs1  : std_logic is control_flags(5);
-  alias read_rs2  : std_logic is control_flags(6);
-  alias rState : std_logic_vector(1 downto 0) is control_flags(6 downto 5);
 
-  alias opcode : std_logic_vector(6 downto 0) is iword(6 downto 0);
-  alias funct3 : std_logic_vector(2 downto 0) is iword(14 downto 12);
+  alias opcode : std_logic_vector(6 downto 0) is iword_reg(6 downto 0);
+  alias funct3 : std_logic_vector(2 downto 0) is iword_reg(14 downto 12);
 
 
 begin
@@ -54,23 +53,16 @@ begin
 
       if(currstate = rst) then
         currstate <= fetch;
-        rState <= "00";
+        iword_reg <= iword;
 
       elsif(currstate = writeback) then
         currstate <= fetch;
-        rState <= "00";
+        iword_reg <= iword;
 
       elsif(currstate = fetch) then
-        currstate <= rs1;
-        rState <= "01";
-
-      elsif(currstate = rs1) then
-        currstate <= rs2;
-        rState <= "10";
-
-      elsif(currstate = rs2) then
+        currstate <= decode;
+      elsif(currstate = decode) then
         currstate <= execute;
-        rState <= "11";
 
       elsif(currstate = execute and (mem_phase = '1')) then
         currstate <= memory;
@@ -95,16 +87,15 @@ begin
   fetchflag <= '1' when currstate = rst or currstate = writeback
                else '0';
 
-
   -- concurrent signals for register access
 
   -- For I | S | B | U | J - Immediate
-  w31_to_w11 <= (others => iword(31));
+  w31_to_w11 <= (others => iword_reg(31));
 
-  imm <= w31_to_w11 & iword(30 downto 25) & iword(24 downto 20) when opcode = OP_LW or opcode = OP_IType or opcode = OP_JALR  -- I-Type
-         else w31_to_w11 & iword(30 downto 25) & iword(11 downto 7)                                                       when opcode = OP_SW  -- S-Type
-         else w31_to_w11(20 downto 1) & iword(7) & iword(30 downto 25) & iword(11 downto 8) & '0'                         when opcode = OP_BRANCH  -- B-Type
-         else w31_to_w11(11 downto 0) & iword(19 downto 12) & iword(20) & iword(30 downto 25) & iword(24 downto 21) & '0' when opcode = OP_JAL  -- J-Type
+  imm <= w31_to_w11 & iword_reg(30 downto 25) & iword_reg(24 downto 20) when opcode = OP_LW or opcode = OP_IType or opcode = OP_JALR  -- I-Type
+         else w31_to_w11 & iword_reg(30 downto 25) & iword_reg(11 downto 7)                                                               when opcode = OP_SW  -- S-Type
+         else w31_to_w11(20 downto 1) & iword_reg(7) & iword_reg(30 downto 25) & iword_reg(11 downto 8) & '0'                             when opcode = OP_BRANCH  -- B-Type
+         else w31_to_w11(11 downto 0) & iword_reg(19 downto 12) & iword_reg(20) & iword_reg(30 downto 25) & iword_reg(24 downto 21) & '0' when opcode = OP_JAL  -- J-Type
          else (others => '0');
 
   -- control flags

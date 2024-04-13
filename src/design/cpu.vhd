@@ -22,14 +22,11 @@ architecture rtl of cpu is
 
   -- Decode Outputs (decode --> register, alu, control)
   signal imm               : std_logic_vector(31 downto 0);
-  signal control_flags_out : std_logic_vector(6 downto 0);
+  signal control_flags_out : std_logic_vector(4 downto 0);
 
   -- Alu operands (register --> alu)
-  signal rs1         : std_logic_vector(31 downto 0);
-  signal rs2         : std_logic_vector(31 downto 0);
-  signal reg_datain  : std_logic_vector(31 downto 0);
-  signal reg_dataout : std_logic_vector(31 downto 0);
-  signal reg_addr    : std_logic_vector(4 downto 0);
+  signal rs1 : std_logic_vector(31 downto 0);
+  signal rs2 : std_logic_vector(31 downto 0);
 
   -- Alu inputs
   signal a : std_logic_vector(31 downto 0);
@@ -48,61 +45,25 @@ architecture rtl of cpu is
   signal pcflag    : std_logic := '0';
   signal fetchflag : std_logic := '0';
 
-  signal iword_reg   : std_logic_vector(31 downto 0);
   signal instruction : std_logic_vector(16 downto 0);
 
   signal pc_inc : std_logic_vector(15 downto 0);
   signal pc_out : std_logic_vector(15 downto 0);
 
-  alias rs1adr : std_logic_vector(4 downto 0) is iword_reg(19 downto 15);
-  alias rs2adr : std_logic_vector(4 downto 0) is iword_reg(24 downto 20);
-  alias rdadr  : std_logic_vector(4 downto 0) is iword_reg(11 downto 7);
-
-  alias mem_phase : std_logic is control_flags_out(0);
-  alias mem_write : std_logic is control_flags_out(1);
-  alias reg_write : std_logic is control_flags_out(2);
-  alias imm_as_a  : std_logic is control_flags_out(3);
-  alias jump      : std_logic is control_flags_out(4);
-  alias read_rs1  : std_logic is control_flags_out(5);
-  alias read_rs2  : std_logic is control_flags_out(6);
-  alias rState    : std_logic_vector(1 downto 0) is control_flags_out(6 downto 5);
-
 begin
-  instruction <= iword_reg(31 downto 25) & iword_reg(14 downto 12) & iword_reg(6 downto 0);
-
-  reg_addr <= rs1adr when rState = "00"
-              else rs2adr when rState = "01"
-              else rdadr;
-
-
-  -- rs1 <= reg_dataout when rState = "01";
-  -- rs2 <= reg_dataout when rState = "10";
-
-  process(clk, reset)
-  begin
-    if rising_edge(clk) then
-      if rState = "01" then
-        rs1 <= reg_dataout;
-      end if;
-
-      if rState = "10" then
-        rs2 <= reg_dataout;
-      end if;
-
-      if fetchflag = '1' then
-        iword_reg <= data_in;
-      end if;
-    end if;
-  end process;
+  instruction <= data_in(31 downto 25) & data_in(14 downto 12) & data_in(6 downto 0);
 
   regs_inst : entity work.regs(rtl)
     port map (
       clk      => clk,
       reset    => reset,
-      addr     => reg_addr,
-      datain   => rd,
+      rs1adr   => data_in(19 downto 15),
+      rs2adr   => data_in(24 downto 20),
+      rdadr    => data_in(11 downto 7),
+      rd       => rd,
       regwrite => wbflag,
-      dataout  => reg_dataout
+      rs1      => rs1,
+      rs2      => rs2
       );
 
   alu_inst : entity work.alu(rtl)
@@ -119,7 +80,7 @@ begin
     port map (
       clk               => clk,
       reset             => reset,
-      iword             => iword_reg,
+      iword             => data_in,
       control_flags_out => control_flags_out,
       imm               => imm,
       wbflag            => wbflag,
