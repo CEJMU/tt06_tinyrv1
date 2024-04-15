@@ -11,7 +11,7 @@ entity cpu is
     data_out : out std_logic_vector(31 downto 0);
     addr_out : out std_logic_vector(13 downto 0);
     write_en : out std_logic
-    );
+  );
 end entity;
 
 architecture rtl of cpu is
@@ -46,20 +46,32 @@ architecture rtl of cpu is
   signal fetchflag : std_logic := '0';
 
   signal instruction : std_logic_vector(16 downto 0);
+  signal iword_reg   : std_logic_vector(31 downto 0) := (others => '0');
 
   signal pc_inc : std_logic_vector(15 downto 0);
   signal pc_out : std_logic_vector(15 downto 0);
 
 begin
-  instruction <= data_in(31 downto 25) & data_in(14 downto 12) & data_in(6 downto 0);
+  instruction <= iword_reg(31 downto 25) & iword_reg(14 downto 12) & iword_reg(6 downto 0);
+
+  update_iword : process (clk, reset)
+  begin
+    if reset = '1' then
+      iword_reg <= (others => '0');
+    elsif rising_edge(clk) then
+      if fetchflag = '1' then
+        iword_reg <= data_in;
+      end if;
+    end if;
+  end process;
 
   regs_inst : entity work.regs(rtl)
     port map (
       clk      => clk,
       reset    => reset,
-      rs1adr   => data_in(19 downto 15),
-      rs2adr   => data_in(24 downto 20),
-      rdadr    => data_in(11 downto 7),
+      rs1adr   => iword_reg(19 downto 15),
+      rs2adr   => iword_reg(24 downto 20),
+      rdadr    => iword_reg(11 downto 7),
       rd       => rd,
       regwrite => wbflag,
       rs1      => rs1,
@@ -80,7 +92,7 @@ begin
     port map (
       clk               => clk,
       reset             => reset,
-      iword             => data_in,
+      iword             => iword_reg,
       control_flags_out => control_flags_out,
       imm               => imm,
       wbflag            => wbflag,
@@ -92,16 +104,16 @@ begin
   write_en <= memflag;
 
   b <= imm when control_flags_out(3) = '1' else
-       rs2;
+    rs2;
 
   rd <= x"0000" & pc_inc when control_flags_out(4) = '1' else
-        data_in when control_flags_out(0) = '1'
-        else rdAlu;
+    data_in when control_flags_out(0) = '1'
+    else rdAlu;
 
   s0 <= rdAlu(16) when control_flags_out(4) = '1'
-        else '0';
+    else '0';
   s1 <= rdAlu(17) when control_flags_out(4) = '1'
-        else '1';
+    else '1';
 
   data_out <= rs2;
 
@@ -118,6 +130,6 @@ begin
       );
 
   addr_out <= pc_out(15 downto 2) when fetchflag = '1'
-              else rdAlu(13 downto 0);
+    else rdAlu(13 downto 0);
 
 end architecture;
