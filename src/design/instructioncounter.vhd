@@ -22,7 +22,6 @@ architecture rtl of instructioncounter is
 
   signal s1s0 : std_logic_vector(1 downto 0);
   signal reg  : std_logic_vector(15 downto 0) := (others => '0');          -- einsprung adresse
-
 begin
 
   s1s0 <= s1 & s0;

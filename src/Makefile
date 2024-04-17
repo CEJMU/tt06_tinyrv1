@@ -79,16 +79,16 @@ help:
 # defaults
 SIM ?= ghdl
 TOPLEVEL_LANG ?= vhdl
-SIM_ARGS+=--wave=build/cpu.ghw
+SIM_ARGS+=--wave=build/tt_um_cejmu_riscv.ghw
 
 VHDL_SOURCES += $(PWD)/design/*.vhd
 # use VHDL_SOURCES for VHDL files
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL = cpu
+TOPLEVEL = tt_um_cejmu_riscv
 
 # MODULE is the basename of the Python test file
-MODULE = test_cpu
+MODULE = test_toplevel
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim

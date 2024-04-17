@@ -4,18 +4,21 @@ use ieee.numeric_std.all;
 
 entity regs is
   port (
-    clk        : in  std_logic;
-    reset      : in  std_logic;
+    clk   : in std_logic;
+    reset : in std_logic;
 
-    rs1adr     : in  std_logic_vector(4 downto 0);
-    rs2adr     : in  std_logic_vector(4 downto 0);
-    rdadr      : in  std_logic_vector(4 downto 0);
+    rs1adr : in std_logic_vector(4 downto 0);
+    rs2adr : in std_logic_vector(4 downto 0);
+    rdadr  : in std_logic_vector(4 downto 0);
 
-    rd         : in  std_logic_vector(31 downto 0);
-    regwrite   : in  std_logic;
+    rd       : in std_logic_vector(31 downto 0);
+    regwrite : in std_logic;
 
-    rs1        : out std_logic_vector(31 downto 0);
-    rs2        : out std_logic_vector(31 downto 0)
+    rs1 : out std_logic_vector(31 downto 0);
+    rs2 : out std_logic_vector(31 downto 0);
+
+    -- Register x1 goes directly on the TT output pins
+    x1 : out std_logic_vector(14 downto 0)
   );
 end entity;
 
@@ -41,6 +44,7 @@ begin
 
       rs1 <= registers(to_integer(unsigned(rs1adr)));
       rs2 <= registers(to_integer(unsigned(rs2adr)));
+      x1  <= registers(1)(14 downto 0);
     end if;
   end process;
 end architecture;

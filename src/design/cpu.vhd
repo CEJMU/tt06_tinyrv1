@@ -4,13 +4,16 @@ use ieee.numeric_std.all;
 
 entity cpu is
   port(
-    clk     : in std_logic;
-    reset   : in std_logic;
-    data_in : in std_logic_vector(31 downto 0);
+    clk        : in std_logic;
+    reset      : in std_logic;
+    data_in    : in std_logic_vector(31 downto 0);
+    data_valid : in std_logic;
 
     data_out : out std_logic_vector(31 downto 0);
     addr_out : out std_logic_vector(13 downto 0);
-    write_en : out std_logic
+    write_en : out std_logic;
+    mem_req  : out std_logic;
+    x1       : out std_logic_vector(14 downto 0)
   );
 end entity;
 
@@ -22,7 +25,7 @@ architecture rtl of cpu is
 
   -- Decode Outputs (decode --> register, alu, control)
   signal imm               : std_logic_vector(31 downto 0);
-  signal control_flags_out : std_logic_vector(4 downto 0);
+  signal control_flags_out : std_logic_vector(5 downto 0);
 
   -- Alu operands (register --> alu)
   signal rs1 : std_logic_vector(31 downto 0);
@@ -51,6 +54,13 @@ architecture rtl of cpu is
   signal pc_inc : std_logic_vector(15 downto 0);
   signal pc_out : std_logic_vector(15 downto 0);
 
+  alias mem_phase : std_logic is control_flags_out(0);
+  alias mem_write : std_logic is control_flags_out(1);
+  alias reg_write : std_logic is control_flags_out(2);
+  alias imm_as_a  : std_logic is control_flags_out(3);
+  alias jump      : std_logic is control_flags_out(4);
+  alias pc_to_addr      : std_logic is control_flags_out(5);
+
 begin
   instruction <= iword_reg(31 downto 25) & iword_reg(14 downto 12) & iword_reg(6 downto 0);
 
@@ -75,7 +85,8 @@ begin
       rd       => rd,
       regwrite => wbflag,
       rs1      => rs1,
-      rs2      => rs2
+      rs2      => rs2,
+      x1       => x1
       );
 
   alu_inst : entity work.alu(rtl)
@@ -93,12 +104,14 @@ begin
       clk               => clk,
       reset             => reset,
       iword             => iword_reg,
+      data_valid        => data_valid,
       control_flags_out => control_flags_out,
       imm               => imm,
       wbflag            => wbflag,
       memflag           => memflag,
       pcflag            => pcflag,
-      fetchflag         => fetchflag
+      fetchflag         => fetchflag,
+      mem_req           => mem_req
       );
 
   write_en <= memflag;
@@ -129,7 +142,7 @@ begin
       pc_new    => pc_out
       );
 
-  addr_out <= pc_out(15 downto 2) when fetchflag = '1'
+  addr_out <= pc_out(15 downto 2) when pc_to_addr = '1'
     else rdAlu(13 downto 0);
 
 end architecture;
