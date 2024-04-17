@@ -13,7 +13,7 @@ entity cpu is
     addr_out : out std_logic_vector(13 downto 0);
     write_en : out std_logic;
     mem_req  : out std_logic;
-    x1       : out std_logic_vector(14 downto 0)
+    x1       : out std_logic_vector(12 downto 0)
   );
 end entity;
 
@@ -49,7 +49,7 @@ architecture rtl of cpu is
   signal fetchflag : std_logic := '0';
 
   signal instruction : std_logic_vector(16 downto 0);
-  signal iword_reg   : std_logic_vector(31 downto 0) := (others => '0');
+  signal iword_reg   : std_logic_vector(31 downto 0);
 
   signal pc_inc : std_logic_vector(15 downto 0);
   signal pc_out : std_logic_vector(15 downto 0);
