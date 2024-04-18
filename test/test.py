@@ -6,12 +6,19 @@ from cocotb.binary import BinaryValue
 import copy
 
 mem = {
-    0: 0b00000000010100001000000010010011,
-    1: 0b00000000001000000000000100010011,
-    2: 0b00000000000100010000000110110011,
-    3: 0b00000000001100000010001110100011,
-    4: 0b00000000011100000010001000000011,
-    5: 0b11111110000100000001011011100011,
+    0:  0b00000000010100001000000010010011,  # addi
+    1:  0b00000000001000000000000100010011,  # addi
+    2:  0b00000000000100010000000110110011,  # add
+    3:  0b00000000000100010100001010110011,  # xor
+    4:  0b00000000000100010111001100110011,  # and
+    5:  0b00000000001100000010011110100011,  # sw
+    6:  0b00000000111100000010001000000011,  # lw
+    7:  0b00000000100000000000001111101111,  # jal x7, 8
+    8:  0b00000000000000000010011110100011,  # sw 0 in mem[7]. This instruction should never execute
+    9:  0b00000011000000000000010010010011,  # addi x9 = 12*4 = 48
+    10: 0b00000000000001001000000001100111,  # jr x9
+    11: 0b00000000000000000010011110100011,  # sw 0 in mem[7]. This instruction should never execute
+    12: 0b00000000000100000000000001100011,  # bne endless
 }
 
 counter = 18
@@ -128,40 +135,35 @@ def i_add(dut, old_reg, rd, rs1, rs2):
     return reg(dut, rd) == reg(dut, rs1, old_reg) + reg(dut, rs2, old_reg)
 
 
-def i_and(dut, rd, rs1, rs2):
-    return reg(dut, rd) == reg(dut, rs1) & reg(dut, rs2)
+def i_and(dut, old_reg, rd, rs1, rs2):
+    return reg(dut, rd) == reg(dut, rs1, old_reg) & reg(dut, rs2, old_reg)
 
 
-def i_xor(dut, rd, rs1, rs2):
-    return reg(dut, rd) == reg(dut, rs1) ^ reg(dut, rs2)
+def i_xor(dut, old_reg, rd, rs1, rs2):
+    return reg(dut, rd) == reg(dut, rs1, old_reg) ^ reg(dut, rs2, old_reg)
 
 
 def i_sw(dut, rs1, rs2, imm):
     global mem
-    print("sw: ================")
-    print(mem)
-    print("================")
     return mem[reg(dut, rs1) + imm] == reg(dut, rs2)
 
 
 def i_lw(dut, rd, rs1, imm):
     global mem
-    print("lw: ================")
-    print(mem)
-    print("================")
     return reg(dut, rd) == mem[reg(dut, rs1) + imm]
 
 
 def i_addi(dut, old_reg, rd, rs1, imm):
-    print(reg(dut, rs1, old_reg))
     return reg(dut, rd) == reg(dut, rs1, old_reg) + imm
 
 
-def i_jal(dut, rd, pc, pc_old, imm):
+def i_jal(dut, pc_old, rd, imm):
+    pc = dut.top.cpu_inst.instruction_inst.pc_new.value
     return reg(dut, rd) == pc_old + 4 and pc == pc_old + imm
 
 
-def i_jr(dut, pc, rs1):
+def i_jr(dut, rs1):
+    pc = dut.top.cpu_inst.instruction_inst.pc_new.value
     return pc == reg(dut, rs1)
 
 
@@ -183,22 +185,39 @@ async def test_instruction(dut, assertion, mem_access=False):
 
 @cocotb.test()
 async def cpu_test_1(dut):
+    global mem
+
     dut.ui_in.value = 0
     await cocotb.start(generate_clock(dut))
-
     # dut._log.info("my_signal_1 is %s", dut.data_out.value[0])
     dut.rst_n.value = 0
     await RisingEdge(dut.clk)
     dut.rst_n.value = 1
 
-    for i in range(2):
-        old_reg = copy.copy(dut.top.cpu_inst.regs_inst.registers.value)
-        await test_instruction(dut, lambda: i_addi(dut, old_reg, 1, 1, 5))
-        old_reg = copy.copy(dut.top.cpu_inst.regs_inst.registers.value)
-        await test_instruction(dut, lambda: i_addi(dut, old_reg, 2, 0, 2))
-        old_reg = copy.copy(dut.top.cpu_inst.regs_inst.registers.value)
-        await test_instruction(dut, lambda: i_add(dut, old_reg, 3, 2, 1))
-        await test_instruction(dut, lambda: i_sw(dut, 0, 3, 7))
-        await test_instruction(dut, lambda: i_lw(dut, 4, 0, 7))
-        pc_old = dut.top.cpu_inst.instruction_inst.pc_new.value
-        await test_instruction(dut, lambda: i_bne(dut, pc_old, 1, 0, -20))
+    old_reg = copy.copy(dut.top.cpu_inst.regs_inst.registers.value)
+    await test_instruction(dut, lambda: i_addi(dut, old_reg, 1, 1, 5))
+    old_reg = copy.copy(dut.top.cpu_inst.regs_inst.registers.value)
+    await test_instruction(dut, lambda: i_addi(dut, old_reg, 2, 0, 2))
+    old_reg = copy.copy(dut.top.cpu_inst.regs_inst.registers.value)
+    await test_instruction(dut, lambda: i_add(dut, old_reg, 3, 2, 1))
+    old_reg = copy.copy(dut.top.cpu_inst.regs_inst.registers.value)
+    await test_instruction(dut, lambda: i_xor(dut, old_reg, 5, 2, 1))
+    old_reg = copy.copy(dut.top.cpu_inst.regs_inst.registers.value)
+    await test_instruction(dut, lambda: i_and(dut, old_reg, 6, 2, 1))
+    await test_instruction(dut, lambda: i_sw(dut, 0, 3, 15))
+    await test_instruction(dut, lambda: i_lw(dut, 4, 0, 15))
+    pc_old = dut.top.cpu_inst.instruction_inst.pc_new.value
+    await test_instruction(dut, lambda: i_jal(dut, pc_old, 7, 8))
+    old_reg = copy.copy(dut.top.cpu_inst.regs_inst.registers.value)
+    await test_instruction(dut, lambda: i_addi(dut, old_reg, 9, 0, 48))
+    pc_old = dut.top.cpu_inst.instruction_inst.pc_new.value
+    await test_instruction(dut, lambda: i_jr(dut, 9))
+    pc_old = dut.top.cpu_inst.instruction_inst.pc_new.value
+    await test_instruction(dut, lambda: i_bne(dut, pc_old, 1, 0, 0))
+
+    print("Mem: ")
+    print(mem)
+    print()
+    print("Regs: ")
+    for i in range(32):
+        print(f"x{i}: {reg(dut, i).integer}")
