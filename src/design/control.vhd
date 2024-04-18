@@ -12,7 +12,7 @@ entity control is
     data_valid        : in  std_logic;
     imm               : out std_logic_vector(31 downto 0);
     -- 2 downto 0 "instructiontype" | 3 I-type | 4 pc
-    control_flags_out : out std_logic_vector(5 downto 0);
+    control_flags_out : out std_logic_vector(6 downto 0);
 
     wbflag    : out std_logic;
     memflag   : out std_logic;
@@ -27,7 +27,7 @@ architecture rtl of control is
   type states is (rst, fetch, decode, execute, memory, writeback, d2);
   signal currstate : states;
 
-  signal control_flags : std_logic_vector(5 downto 0);
+  signal control_flags : std_logic_vector(6 downto 0);
   -- concurrentsignals for registers
   signal w31_to_w11    : std_logic_vector(20 downto 0);
 
@@ -39,6 +39,7 @@ architecture rtl of control is
   alias imm_as_a   : std_logic is control_flags(3);
   alias jump       : std_logic is control_flags(4);
   alias pc_to_addr : std_logic is control_flags(5);
+  alias rs1_to_pc  : std_logic is control_flags(6);
 
   alias opcode : std_logic_vector(6 downto 0) is iword(6 downto 0);
   alias funct3 : std_logic_vector(2 downto 0) is iword(14 downto 12);
@@ -60,7 +61,7 @@ begin
 
       elsif(currstate = fetch) then
         if data_valid = '1' then
-            currstate <= d2;
+          currstate <= d2;
         end if;
 
       elsif(currstate = d2) then
@@ -104,6 +105,9 @@ begin
   pc_to_addr <= '1' when currstate = fetch or currstate = rst or currstate = writeback
     else '0';
 
+  rs1_to_pc <= '1' when opcode = OP_JR
+    else '0';
+
   -- concurrent signals for register access
 
   -- For I | S | B | U | J - Immediate
@@ -125,7 +129,7 @@ begin
   reg_write <= '0' when opcode = OP_BRANCH else '1';
   imm_as_a  <= '1' when opcode = OP_Itype or opcode = OP_LUI or opcode = OP_AUIPC or ((opcode = OP_LW or opcode = OP_SW) and funct3 = FUNCT3_MEMORY) or opcode = OP_JAL or opcode = OP_JALR
     else '0';
-  jump <= '1' when opcode = OP_Branch or opcode = OP_JAL or opcode = OP_JALR
+  jump <= '1' when opcode = OP_Branch or opcode = OP_JAL or opcode = OP_JALR or opcode = OP_JR
     else '0';
 
 end architecture rtl;

@@ -25,7 +25,7 @@ architecture rtl of cpu is
 
   -- Decode Outputs (decode --> register, alu, control)
   signal imm               : std_logic_vector(31 downto 0);
-  signal control_flags_out : std_logic_vector(5 downto 0);
+  signal control_flags_out : std_logic_vector(6 downto 0);
 
   -- Alu operands (register --> alu)
   signal rs1 : std_logic_vector(31 downto 0);
@@ -51,15 +51,17 @@ architecture rtl of cpu is
   signal instruction : std_logic_vector(16 downto 0);
   signal iword_reg   : std_logic_vector(31 downto 0);
 
-  signal pc_inc : std_logic_vector(15 downto 0);
-  signal pc_out : std_logic_vector(15 downto 0);
+  signal pc_inc    : std_logic_vector(15 downto 0);
+  signal pc_out    : std_logic_vector(15 downto 0);
+  signal pc_offset : std_logic_vector(15 downto 0);
 
-  alias mem_phase : std_logic is control_flags_out(0);
-  alias mem_write : std_logic is control_flags_out(1);
-  alias reg_write : std_logic is control_flags_out(2);
-  alias imm_as_a  : std_logic is control_flags_out(3);
-  alias jump      : std_logic is control_flags_out(4);
-  alias pc_to_addr      : std_logic is control_flags_out(5);
+  alias mem_phase  : std_logic is control_flags_out(0);
+  alias mem_write  : std_logic is control_flags_out(1);
+  alias reg_write  : std_logic is control_flags_out(2);
+  alias imm_as_a   : std_logic is control_flags_out(3);
+  alias jump       : std_logic is control_flags_out(4);
+  alias pc_to_addr : std_logic is control_flags_out(5);
+  alias rs1_to_pc  : std_logic is control_flags_out(6);
 
 begin
   instruction <= iword_reg(31 downto 25) & iword_reg(14 downto 12) & iword_reg(6 downto 0);
@@ -137,10 +139,13 @@ begin
       pcflag    => pcflag,
       s0        => s0,
       s1        => s1,
-      pc_offset => imm(15 downto 0),
+      pc_offset => pc_offset,
       pc_inc    => pc_inc,
       pc_new    => pc_out
       );
+
+  pc_offset <= rs1(15 downto 0) when rs1_to_pc = '1'
+    else imm(15 downto 0);
 
   addr_out <= pc_out(15 downto 2) when pc_to_addr = '1'
     else rdAlu(13 downto 0);

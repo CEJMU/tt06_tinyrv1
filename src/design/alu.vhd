@@ -56,9 +56,10 @@ begin
         rd(15 downto 0)  <= (others => '0');
         s1s0             <= "00";
 
-      -- elsif opcode = OP_JR then
-      --   -- TODO
-      --   rd <= (others => '0');
+      elsif opcode = OP_JR then
+        rd(31 downto 18) <= (others => '0');
+        rd(15 downto 0)  <= (others => '0');
+        s1s0             <= "01";
 
       elsif opcode = OP_BRANCH and funct3 = FUNCT3_BNE then
         rd(31 downto 18) <= (others => '0');
