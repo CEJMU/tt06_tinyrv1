@@ -17,4 +17,4 @@ To test our design you will need to use external hardware.
 
 ## External hardware
 
-To use our design you will need to use the provided [spi_slave_tt06_with_memory](../src/design/spi_slave_tt06_with_memory.vhd) and synthesize it for an 50 MHz FPGA.
+To use our design you will need to use the provided spi_slave_tt06_with_memory and synthesize it for an 12 MHz FPGA.
