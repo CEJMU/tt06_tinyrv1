@@ -9,7 +9,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 # How it works
 
-The project consist of a RISC-V VHDL Model and supports the [Tiny RV1 ISA](https://github.com/cbatten/ece4750-tinyrv-isa) without MUL. In addition OR and XOR are supported.
+The project consist of a RISC-V VHDL Model and supports the [Tiny RV1 ISA](https://github.com/cbatten/ece4750-tinyrv-isa) without MUL. In addition AND and XOR are supported.
 
 ## How to test
 
@@ -17,4 +17,4 @@ To test our design you will need to use external hardware.
 
 ## External hardware
 
-To use our design you will need to use the provided [spi_slave_tt06_with_memory](../src/design/spi_slave_tt06_with_memory.vhd) and synthesize it for an 12 MHz FPGA.
+To use our design you will need to use the provided [spi_slave_tt06_with_memory](../src/design/spi_slave_tt06_with_memory.vhd) and synthesize it for an 50 MHz FPGA.
