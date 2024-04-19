@@ -8,7 +8,7 @@ package commons is
   constant period     : time := 20 ns;
   -- To prevent rounding errors, just to be sure
   constant half_period: time := 10 ns;
-  constant sclk_period: time := 60 ns;
+  constant sclk_period: time := 30 ns;
 
   -- Outputting values to the console
   function slv_to_hexstring(x: std_logic_vector) return string;
