@@ -18,14 +18,14 @@ entity regs is
     rs2 : out std_logic_vector(31 downto 0);
 
     -- Register x1 goes directly on the TT output pins
-    x1 : out std_logic_vector(14 downto 0)
+    x1 : out std_logic_vector(12 downto 0)
   );
 end entity;
 
 architecture rtl of regs is
 
   type reg_array is array (0 to 31) of std_logic_vector(31 downto 0);
-  signal registers : reg_array := (others => (others => '0'));
+  signal registers : reg_array;
 
 begin
   process (clk, reset)
@@ -34,6 +34,11 @@ begin
       -- Reset Outputs
       rs1 <= (others => '0');
       rs2 <= (others => '0');
+
+      -- NOTE This actually works. It is unrolled as registers[1023:0] = 000000...
+      for i in 0 to 31 loop
+        registers(i) <= (others => '0');
+      end loop;
 
     elsif rising_edge(clk) then
       -- Only write, if regwrite is set
@@ -44,7 +49,7 @@ begin
 
       rs1 <= registers(to_integer(unsigned(rs1adr)));
       rs2 <= registers(to_integer(unsigned(rs2adr)));
-      x1  <= registers(1)(14 downto 0);
+      x1  <= registers(1)(12 downto 0);
     end if;
   end process;
 end architecture;

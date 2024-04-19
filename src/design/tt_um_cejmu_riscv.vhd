@@ -20,6 +20,7 @@ architecture rtl of tt_um_cejmu_riscv is
   alias mosi : std_logic is uo_out(0);
   alias sclk : std_logic is uo_out(1);
   alias cs : std_logic is uo_out(2);    -- active low
+
   alias miso : std_logic is ui_in(0);
 
   signal write_enable : std_logic;
@@ -30,15 +31,15 @@ architecture rtl of tt_um_cejmu_riscv is
   signal mem_req      : std_logic;
   signal data_valid   : std_logic;
   signal reset        : std_logic;
-  signal x1           : std_logic_vector(14 downto 0);
+  signal x1           : std_logic_vector(12 downto 0);
 
 begin
 
   uio_oe <= (others => '1');
 
-  -- TODO Fix me
-  uo_out(7 downto 3) <= x1(6 downto 2);
-  uio_out <= x1(14 downto 7);
+  uo_out(7 downto 3) <= x1(4 downto 0);
+  uio_out <= x1(12 downto 5);
+
   cs <= mem_req;
 
 

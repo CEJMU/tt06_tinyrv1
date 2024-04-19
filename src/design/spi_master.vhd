@@ -35,8 +35,6 @@ architecture rtl of spi_master is
 
     signal data_reg : std_logic_vector(31 downto 0);
 
-    signal data_in_reg    : std_logic_vector(31 downto 0);
-    signal adress_in_reg  : std_logic_vector(15 downto 0);
     signal mode_select_zw : std_logic;
 
     signal write_adress_counter : integer := 16;
@@ -99,8 +97,6 @@ begin
             mode_select_zw       <= '0';
             data_out             <= (others => '0');
             -- write_adress_counter <= 15;
-            adress_in_reg        <= addr;
-            data_in_reg          <= data_in;
             data_reg             <= (others => '0');
             write_adress_counter <= 16;         -- first bit: 0 -> read mode || 1 -> write mode
             read_adress_counter  <= 33;
@@ -108,8 +104,6 @@ begin
             if (cs = '0') then
                 currstate      <= send_adress;
                 mode_select_zw <= mode_select;
-                data_in_reg    <= data_in;
-                adress_in_reg  <= addr;
             end if;
 
         elsif (currstate = send_adress) then
@@ -117,10 +111,10 @@ begin
                 mosi <= mode_select_zw;
                 write_adress_counter <= write_adress_counter - 1;
             elsif(write_adress_counter > 0 and write_adress_counter <= 15) then
-                mosi                 <= adress_in_reg(write_adress_counter);
+                mosi                 <= addr(write_adress_counter);
                 write_adress_counter <= write_adress_counter - 1;
             else
-                mosi            <= adress_in_reg(write_adress_counter);
+                mosi            <= addr(write_adress_counter);
                 if (mode_select_zw = '0') then
                     currstate <= read_data;
                 elsif (mode_select_zw = '1') then
@@ -147,11 +141,11 @@ begin
                 read_adress_counter <= read_adress_counter - 1;
 
             elsif (read_adress_counter > 0) then
-                mosi                <= data_in_reg(read_adress_counter);
+                mosi                <= data_in(read_adress_counter);
                 read_adress_counter <= read_adress_counter - 1;
             else
                 currstate      <= data;
-                mosi                <= data_in_reg(read_adress_counter);
+                mosi                <= data_in(read_adress_counter);
             end if;
 
         elsif (currstate = data) then
