@@ -2,10 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity tt_um_cejmu_riscv is
+entity vhdl_design_test is
   port (
     clk     : in  std_logic;
-    ena     : in  std_logic;
     rst_n   : in  std_logic;
     ui_in   : in  std_logic_vector(7 downto 0);
     uo_out  : out std_logic_vector(7 downto 0);
@@ -13,13 +12,12 @@ entity tt_um_cejmu_riscv is
     uio_out : out std_logic_vector(7 downto 0);
     uio_oe  : out std_logic_vector(7 downto 0)
   );
-end entity tt_um_cejmu_riscv;
+end entity vhdl_design_test;
 
-architecture rtl of tt_um_cejmu_riscv is
+architecture rtl of vhdl_design_test is
 
-  alias mosi : std_logic is uo_out(0);
-  alias sclk : std_logic is uo_out(1);
-  alias cs : std_logic is uo_out(2);    -- active low
+  --alias mosi : std_logic is uo_out(0);
+  --alias sclk : std_logic is uo_out(1);
   alias miso : std_logic is ui_in(0);
 
   signal write_enable : std_logic;
@@ -31,6 +29,11 @@ architecture rtl of tt_um_cejmu_riscv is
   signal data_valid   : std_logic;
   signal reset        : std_logic;
   signal x1           : std_logic_vector(14 downto 0);
+
+  signal sclk_zw : std_logic;
+  signal mosi_zw : std_logic;
+  signal miso_zw : std_logic;
+  signal cs : std_logic;
 
 begin
 
@@ -63,17 +66,26 @@ begin
   spi_master_inst : entity work.spi_master (rtl)
     port map(
       clk         => clk,
-      sclk        => sclk,
+      sclk        => sclk_zw,
       mode_select => write_enable,
       reset       => reset,
-      mosi        => mosi,
-      miso        => miso,
+      mosi        => mosi_zw,
+      miso        => miso_zw,
       cs          => mem_req,
       data_out    => spi_data_out,
       data_in     => spi_data_in,
       addr        => spi_addr_in,
       data_valid  => data_valid
       );
+
+    spi_slave_tt06_with_memory_inst: entity work.spi_slave_tt06_with_memory
+     port map(
+        sclk => sclk_zw,
+        reset => reset,
+        mosi => mosi_zw,
+        miso => miso_zw,
+        cs => cs
+    );
 
 
 end architecture rtl;

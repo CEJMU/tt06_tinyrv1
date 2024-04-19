@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 entity spi_slave is
   port (
-    sclk       : in  std_logic;                -- serial clock
+    clk       : in  std_logic;                -- serial clock
     mosi       : in  std_logic;                -- master output, slave input
     cs         : in  std_logic;                -- chip select (active low)
 
@@ -28,9 +28,9 @@ architecture rtl of spi_slave is
 
 begin
 
-  process(sclk)
+  process(clk)
   begin
-    if rising_edge(sclk) then
+    if rising_edge(clk) then
       if cs = '1' then
         data_register <= (others => '0');
         addr_register <= (others => '0');

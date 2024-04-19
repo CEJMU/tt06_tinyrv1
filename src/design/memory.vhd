@@ -7,7 +7,7 @@ entity memory is
     clk        : in  std_logic;
     reset      : in  std_logic;
 
-    addr       : in  std_logic_vector(3 downto 0);
+    addr       : in  std_logic_vector(15 downto 0);
     datain     : in  std_logic_vector(31 downto 0);
     write_en   : in  std_logic;
 
@@ -17,8 +17,9 @@ end entity;
 
 architecture simulation of memory is
 
-  type mem_array is array((2**4) - 1 downto 0) of std_logic_vector(31 downto 0);
-  signal mem : mem_array := (others => (others => '0'));
+  type mem_array is array((2**16) - 1 downto 0) of std_logic_vector(31 downto 0);
+  signal mem : mem_array := 
+  (x"00000000", x"00000000");
 
 begin
   process (clk, reset) begin
@@ -30,4 +31,7 @@ begin
       dataout <= mem(to_integer(unsigned(addr)));
     end if;
   end process;
+
+
+
 end architecture;
